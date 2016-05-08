@@ -1,4 +1,9 @@
-[Subsistema test]
+[Subsistema principal]
+		GENERATE	30,10
+		GENERATE	300,60
+
+
+[Subsistema tabulacion]
 
 
 <\F>
