@@ -1,0 +1,298 @@
+REPORTE SNAKE
+
+Información general
+
+      START_TIME         END_TIME     BLOCKS    FACILITIES    STORAGES
+               0            29084         82             3           4 
+
+Bloques no ejecutables
+ 	ENTRADA		STORAGE		5
+	SISTEMA		STORAGE		30000
+	ESTADIO		STORAGE		30000
+	BOLETERIAS		STORAGE		30000
+	BOLETAZAR		VARIABLE		1+RN2@X$CAJAS
+	TIPO			FUNCTION		RN3,D4
+.3,1/.5,2/.9,3/1,4
+	TREC1			VARIABLE		2100+RN3@601
+	TREC2			VARIABLE		2460+RN4@481
+	TREC3			VARIABLE		2520+RN5@961
+	TREC4			VARIABLE		2040+RN6@721
+	TRECITAL		FUNCTION		P$TIPO,E4
+1,V$TREC1/2,V$TREC2/3,V$TREC3/4,V$TREC4
+	TBIS1			VARIABLE		1140+RN7@121
+	TBIS2			VARIABLE		720+RN8@361
+	TBIS3			VARIABLE		480
+	TBIS4			VARIABLE		720
+	TBISES		FUNCTION		P$TIPO,E4
+1,V$TBIS1/2,V$TBIS2/3,V$TBIS3/4,V$TBIS4
+	CANTPER		VARIABLE		4+RN9@7
+	CANTIPER		VARIABLE		P$CANTPER-1
+	GENESTADIO		TABLE			S$ESTADIO,50,25,15			;TABLA PARA LAS PERSONAS EN EL SISTEMA
+	TIEMPO		TABLE			M1,15000,300,20				;TABLA PARA EL TIEMPO EN EL SISTEMA
+	GENBOLET 		TABLE			S$BOLETERIAS,1,1,5			;TABLA PARA LAS PERSONAS EN LA BOLETERIA
+	TIEMPOENTRADA	QTABLE		ENTRADA,30,15,25			;QTABLE PARA EL TIEMPO EN COLA EN LA ENTRADA
+	TABBANDSOPORTE	TABLE			P$TIPO,1,1,4
+				INITIAL		X$CAJAS,3
+
+
+Bloques ejecutables
+
+  LINE         LOC  BLOCK_TYPE                               ENTRY_COUNT  CURRENT_COUNT  RETRY
+     1           1  GENERATE        30,10                            966              0      0
+     2           2  ASSIGN          LLEGOENBUS,0                     966              0      0
+     3           3  GATE        LR  ENTRA,NOENTRA                    966              0      0
+     4           4  ENTER           SISTEMA                          175              0      0
+     5           5  TRANSFER        ,LLEGA                           175              0      0
+     6     NOENTRA  TERMINATE                                        791              0      0
+     7           7  GENERATE        300,60,,25                        25              0      0
+     8           8  ENTER           SISTEMA                           25              0      0
+     9           9  ASSIGN          CANTPER,V$CANTPER                 25              0      0
+    10          10  ASSIGN          AUX,P$CANTPER                     25              0      0
+    11          11  ASSIGN          LLEGOENBUS,1                      25              0      0
+    12    BAJAOTRO  ADVANCE         2,1                              176              0      0
+    13          13  SPLIT           1,LLEGA                          176              0      0
+    14          14  LOOP            AUX,BAJAOTRO                     176              0      0
+    15          15  ADVANCE         18000,3600                        25              0      0
+    16          16  TRANSFER        ,SALIDA                           25              0      0
+    17       LLEGA  TRANSFER        .65,,AENTRA                      351              0      0
+    18          18  ADVANCE         60,5                             118              0      0
+    19      ABOLET  TRANSFER        .95,,INTELI                      118              0      0
+    20          20  ASSIGN          2,V$BOLETAZAR                      9              0      0
+    21          21  TRANSFER        ,PAGAR                             9              0      0
+    22      INTELI  SELECT      NU  2,1,X$CAJAS,,,NOHAY              109              0      0
+    23          23  TRANSFER        ,PAGAR                            65              0      0
+    24       NOHAY  SELECT      MIN 2,1,X$CAJAS,,Q                    44              0      0
+    25       PAGAR  ENTER           BOLETERIAS                       118              0      0
+    26          26  QUEUE           *2                               118              0      0
+    27          27  SEIZE           *2                               118              0      0
+    28          28  DEPART          *2                               118              0      0
+    29          29  ADVANCE         120,30                           118              0      0
+    30          30  RELEASE         *2                               118              0      0
+    31          31  LEAVE           BOLETERIAS                       118              0      0
+    32      AENTRA  ADVANCE         40,10                            351              0      0
+    33          33  QUEUE           ENTRADA                          351              0      0
+    34          34  ENTER           ENTRADA                          351              0      0
+    35          35  DEPART          ENTRADA                          351              0      0
+    36          36  ADVANCE         90,30                            351              0      0
+    37          37  LEAVE           ENTRADA                          351              0      0
+    38          38  ENTER           ESTADIO                          351              0      0
+    39          39  ASSIGN          TIPO,FN$TIPO                     351              0      0
+    40          40  GATE        LS  BANDASOPORTE                     351              0      0
+    41          41  ADVANCE         FN$TRECITAL                      351              0      0
+    42          42  ADVANCE         FN$TBISES                        351              0      0
+    43          43  TABULATE        TABBANDSOPORTE                   351              0      0
+    44          44  TRANSFER        ,ALRECITAL                       351              0      0
+    45   ALRECITAL  TEST        E   P$LLEGOENBUS,1,LLEGOAPIE         351              0      0
+    46          46  ASSEMBLE        P$CANTPER                        176              0      0
+    47          47  ADVANCE         300,60                            25              0      0
+    48          48  SPLIT           V$CANTIPER,ARECITAL               25              0      0
+    49          49  TRANSFER        ,ARECITAL                         25              0      0
+    50   LLEGOAPIE  ADVANCE         180,60                           175              0      0
+    51    ARECITAL  GATE        LS  BANDAPPAL                        351              0      0
+    52          52  ADVANCE         7200,600                         351              0      0
+    53          53  TEST        E   P$LLEGOENBUS,1,SEVAAPIE          351              0      0
+    54          54  ADVANCE         480,120                          176              0      0
+    55          55  LEAVE           ESTADIO                          176              0      0
+    56          56  ASSEMBLE        P$CANTPER                        176              0      0
+    57      SALIDA  ASSEMBLE        2                                 50              0      0
+    58          58  ADVANCE         180,60                            25              0      0
+    59          59  TABULATE        TIEMPO                            25              0      0
+    60          60  LEAVE           SISTEMA                           25              0      0
+    61          61  TERMINATE                                         25              0      0
+    62    SEVAAPIE  ADVANCE         600,180                          175              0      0
+    63          63  TABULATE        TIEMPO                           175              0      0
+    64          64  LEAVE           ESTADIO                          175              0      0
+    65          65  LEAVE           SISTEMA                          175              0      0
+    66          66  TERMINATE                                        175              0      0
+    70          67  GENERATE        120,,,105                        105              0      0
+    71          68  TABULATE        GENESTADIO                       105              0      0
+    72          69  TERMINATE                                        105              0      0
+    73          70  GENERATE        300                               96              0      0
+    74          71  TABULATE        GENBOLET                          96              0      0
+    75          72  TERMINATE                                         96              0      0
+   106          73  GENERATE        ,,,1                               1              0      0
+   107          74  ADVANCE         5400                               1              0      0
+   108          75  LOGIC       S   ENTRA                              1              0      0
+   109          76  ADVANCE         1800                               1              0      0
+   110          77  LOGIC       S   BANDASOPORTE                       1              0      0
+   111          78  ADVANCE         5400                               1              0      0
+   112          79  LOGIC       S   BANDAPPAL                          1              0      0
+   113          80  ADVANCE         5400                               1              0      0
+   114          81  GATE        SE  SISTEMA                            1              0      0
+   115          82  TERMINATE       1                                  1              0      0
+
+Facilities
+
+ FACILITY          ENTRIES    UTIL.  AVE_TIME  AVAILABLE   OWNER   PEND   INTER   RETRY   DELAY
+              1         46    0,186   117,826          1       0      0       0       0       0
+              2         41    0,173   122,683          1       0      0       0       0       0
+              3         31    0,127   119,387          1       0      0       0       0       0
+
+Queues
+
+ QUEUE             MAX      CONT.  ENTRIES ENTRIES(0)  AVE.CONT.   AVE.TIME    AVE.(-0)   RETRY
+              1      2         0        46       18       0,080      50,696      83,286       0
+              2      3         0        41       25       0,058      40,927     104,875       0
+              3      2         0        31       25       0,012      11,258      58,167       0
+        ENTRADA     16         0       351       42       1,541     127,681     145,036       0
+
+Storages
+
+ STORAGE           CAP.   REMAIN.   MIN.   MAX.  ENTRIES  AVL.   AVE.C.    UTIL.  RETRY   DELAY
+     BOLETERIAS   30000    30000       0      9      118     1    0,636    0,000      0       0
+        ENTRADA       5        5       0      5      351     1    1,083    0,217      0       0
+        ESTADIO   30000    30000       0    351      351     1  203,867    0,007      0       0
+        SISTEMA   30000    30000       0    200      200     1  123,314    0,004      0       0
+
+Tables
+
+GENBOLET            TABLE            S$BOLETERIAS,1,1,5
+
+               MEDIA                         :          0,604
+               DESVIACION ESTANDAR           :          1,403
+               CANTIDAD EN RETRY             :              0
+
+          INTERVALO       FRECUENCIA           %     %ACUMULADO    %REMANENTE
+         0  -         1           79      82,292         82,292        17,708
+         2  -         2            7       7,292         89,583        10,417
+         3  -         3            5       5,208         94,792         5,208
+         4  -         4            2       2,083         96,875         3,125
+         5  -  Infinito            3       3,125        100,000         0,000
+
+        MEDIA OVERFLOW                :         6,000
+        DESVIACION ESTANDAR OVERFLOW  :         1,732
+
+        CANTIDAD DE VALORES TABULADOS :            96
+        VALOR MAXIMO TABULADO         :         8,000
+
+GENESTADIO          TABLE            S$ESTADIO,50,25,15
+
+               MEDIA                         :        256,019
+               DESVIACION ESTANDAR           :        116,791
+               CANTIDAD EN RETRY             :              0
+
+          INTERVALO       FRECUENCIA           %     %ACUMULADO    %REMANENTE
+         0  -        50            9       8,571          8,571        91,429
+        51  -        75            4       3,810         12,381        87,619
+        76  -       100            3       2,857         15,238        84,762
+       101  -       125            4       3,810         19,048        80,952
+       126  -       150            4       3,810         22,857        77,143
+       151  -       175            4       3,810         26,667        73,333
+       176  -       200            4       3,810         30,476        69,524
+       201  -       225            3       2,857         33,333        66,667
+       226  -       250            4       3,810         37,143        62,857
+       251  -       275            4       3,810         40,952        59,048
+       276  -       300            4       3,810         44,762        55,238
+       301  -       325            7       6,667         51,429        48,571
+       326  -       350           10       9,524         60,952        39,048
+       351  -       375           41      39,048        100,000         0,000
+            Las frecuencias restantes (1) son todas cero.
+
+        CANTIDAD DE VALORES TABULADOS :           105
+        VALOR MAXIMO TABULADO         :       351,000
+
+TABBANDSOPORTE      TABLE            P$TIPO,1,1,4
+
+               MEDIA                         :          2,302
+               DESVIACION ESTANDAR           :          0,974
+               CANTIDAD EN RETRY             :              0
+
+          INTERVALO       FRECUENCIA           %     %ACUMULADO    %REMANENTE
+         0  -         1           99      28,205         28,205        71,795
+         2  -         2           77      21,937         50,142        49,858
+         3  -         3          145      41,311         91,453         8,547
+         4  -  Infinito           30       8,547        100,000         0,000
+
+        MEDIA OVERFLOW                :         4,000
+        DESVIACION ESTANDAR OVERFLOW  :         0,000
+
+        CANTIDAD DE VALORES TABULADOS :           351
+        VALOR MAXIMO TABULADO         :         4,000
+
+TIEMPO              TABLE            M1,15000,300,20
+
+               MEDIA                         :      17932,375
+               DESVIACION ESTANDAR           :       1736,971
+               CANTIDAD EN RETRY             :              0
+
+          INTERVALO       FRECUENCIA           %     %ACUMULADO    %REMANENTE
+         0  -     15000            5       2,500          2,500        97,500
+     15001  -     15300            5       2,500          5,000        95,000
+     15301  -     15600           11       5,500         10,500        89,500
+     15601  -     15900            5       2,500         13,000        87,000
+     15901  -     16200           15       7,500         20,500        79,500
+     16201  -     16500           11       5,500         26,000        74,000
+     16501  -     16800           12       6,000         32,000        68,000
+     16801  -     17100            7       3,500         35,500        64,500
+     17101  -     17400            9       4,500         40,000        60,000
+     17401  -     17700           15       7,500         47,500        52,500
+     17701  -     18000           12       6,000         53,500        46,500
+     18001  -     18300            8       4,000         57,500        42,500
+     18301  -     18600            8       4,000         61,500        38,500
+     18601  -     18900           10       5,000         66,500        33,500
+     18901  -     19200            8       4,000         70,500        29,500
+     19201  -     19500           16       8,000         78,500        21,500
+     19501  -     19800            9       4,500         83,000        17,000
+     19801  -     20100           12       6,000         89,000        11,000
+     20101  -     20400            5       2,500         91,500         8,500
+     20401  -  Infinito           17       8,500        100,000         0,000
+
+        MEDIA OVERFLOW                :     20929,118
+        DESVIACION ESTANDAR OVERFLOW  :       462,158
+
+        CANTIDAD DE VALORES TABULADOS :           200
+        VALOR MAXIMO TABULADO         :     21684,000
+
+
+QTables
+
+TIEMPOENTRADA       TABLE            ENTRADA,30,15,25
+
+               MEDIA                         :        127,681
+               DESVIACION ESTANDAR           :         72,493
+               CANTIDAD EN RETRY             :              0
+
+          INTERVALO       FRECUENCIA           %     %ACUMULADO    %REMANENTE
+         0  -        30           49      13,960         13,960        86,040
+        31  -        45            8       2,279         16,239        83,761
+        46  -        60            7       1,994         18,234        81,766
+        61  -        75            8       2,279         20,513        79,487
+        76  -        90           33       9,402         29,915        70,085
+        91  -       105           28       7,977         37,892        62,108
+       106  -       120           22       6,268         44,160        55,840
+       121  -       135           26       7,407         51,567        48,433
+       136  -       150           18       5,128         56,695        43,305
+       151  -       165           24       6,838         63,533        36,467
+       166  -       180           35       9,972         73,504        26,496
+       181  -       195           30       8,547         82,051        17,949
+       196  -       210           21       5,983         88,034        11,966
+       211  -       225           15       4,274         92,308         7,692
+       226  -       240           12       3,419         95,726         4,274
+       241  -       255            9       2,564         98,291         1,709
+       256  -       270            5       1,425         99,715         0,285
+       271  -       285            1       0,285        100,000         0,000
+            Las frecuencias restantes (7) son todas cero.
+
+        CANTIDAD DE VALORES TABULADOS :           351
+        VALOR MAXIMO TABULADO         :       276,000
+
+
+Logic Switches
+
+ LOGICSWITCH               VALUE      RETRY
+
+   BANDAPPAL                   1          0
+BANDASOPORTE                   1          0
+       ENTRA                   1          0
+
+Savevalues
+
+ SAVEVALUE               VALUE      RETRY
+     CAJAS                   3          0
+
+
+Cadena de eventos futuros (FEC)
+
+ FEC_XACT_NUMBER    PRI         BDT       CURRENT       NEXT        PARAMETER        VALUE
+             213      0       29097             0          1
+             249      0       29100             0         70
